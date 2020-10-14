@@ -6,6 +6,7 @@ using NetworkObjects;
 using System;
 using System.Text;
 using System.ComponentModel.Design;
+using System.Collections;
 //using System.Diagnostics;
 
 public class NetworkClient : MonoBehaviour
@@ -46,6 +47,8 @@ public class NetworkClient : MonoBehaviour
     void OnConnect(){
         Debug.Log("We are now connected to the server");
 
+        StartCoroutine(SendUpdateToServer());
+
         //// Example to send a handshake message:
         // HandshakeMsg m = new HandshakeMsg();
         // m.player.id = m_Connection.InternalId.ToString();
@@ -61,6 +64,14 @@ public class NetworkClient : MonoBehaviour
         switch(header.cmd){
             case Commands.PLAYER_INIT:
                 InitializeConnectionMsg piMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
+
+                playerUpdateMsg.player.id = piMsg.yourID;
+
+                HandshakeMsg m = new HandshakeMsg();
+                m.player = playerUpdateMsg.player;
+                m.player.id = piMsg.yourID;
+                SendToServer(JsonUtility.ToJson(m));
+
                 Debug.Log("Initialization message received!  Your ID: " + piMsg.yourID);
                 break; 
             case Commands.HANDSHAKE:
@@ -96,6 +107,17 @@ public class NetworkClient : MonoBehaviour
         m_Driver.Dispose();
     }
 
+    IEnumerator SendUpdateToServer()
+    {
+        while (true)
+        {
+            // Send Server updates
+            playerUpdateMsg.player.cubPos = yourCharacter.transform.position;
+            SendToServer(JsonUtility.ToJson(playerUpdateMsg));
+            yield return new WaitForSeconds(0.3f);
+        }
+    }
+
     void Update()
     {
         m_Driver.ScheduleUpdate().Complete();
@@ -125,9 +147,5 @@ public class NetworkClient : MonoBehaviour
 
             cmd = m_Connection.PopEvent(m_Driver, out stream);
         }
-
-        // Send Server updates
-        playerUpdateMsg.player.cubPos = yourCharacter.transform.position;
-        SendToServer(JsonUtility.ToJson(playerUpdateMsg));
     }
 }

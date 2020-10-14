@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 using Unity.Collections;
+using System.Collections.Generic;
 using Unity.Networking.Transport;
 using NetworkMessages;
 using System;
@@ -14,6 +15,8 @@ public class NetworkServer : MonoBehaviour
     public ushort serverPort;
     private NativeList<NetworkConnection> m_Connections;
 
+    private List<NetworkObjects.NetworkPlayer> players;
+
     void Start ()
     {
         m_Driver = NetworkDriver.Create();
@@ -25,6 +28,10 @@ public class NetworkServer : MonoBehaviour
             m_Driver.Listen();
 
         m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
+
+        players = new List<NetworkObjects.NetworkPlayer>();
+        // Send players updates
+        StartCoroutine(SendUpdateToAllClient());
     }
 
     private IEnumerator SendHandshakeToAllClient()
@@ -41,6 +48,23 @@ public class NetworkServer : MonoBehaviour
                 SendToClient(JsonUtility.ToJson(m), m_Connections[i]);
             }
             yield return new WaitForSeconds(2);
+        }
+    }
+
+    private IEnumerator SendUpdateToAllClient()
+    {
+        while (true)
+        {
+            for (int i = 0; i < m_Connections.Length; i++)
+            {
+                if (!m_Connections[i].IsCreated)
+                    continue;
+
+                ServerUpdateMsg m = new ServerUpdateMsg();
+                m.players = players;
+                SendToClient(JsonUtility.ToJson(m), m_Connections[i]);
+            }
+            yield return new WaitForSeconds(0.3f);
         }
     }
 
@@ -63,6 +87,7 @@ public class NetworkServer : MonoBehaviour
         connectionMsg.yourID = newPlayersId.ToString();
 
         SendToClient(JsonUtility.ToJson(connectionMsg), c);
+
         Debug.Log("Accepted a connection");
 
         //// Example to send a handshake message:
@@ -77,23 +102,31 @@ public class NetworkServer : MonoBehaviour
         string recMsg = Encoding.ASCII.GetString(bytes.ToArray());
         NetworkHeader header = JsonUtility.FromJson<NetworkHeader>(recMsg);
 
-        switch(header.cmd){
+        switch (header.cmd){
             case Commands.HANDSHAKE:
-            HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
-            Debug.Log("Handshake message received!");
-            break;
+                HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
+                players.Add(hsMsg.player);
+                Debug.Log("Handshake message received!");
+                break;
             case Commands.PLAYER_UPDATE:
-            PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
-            Debug.Log("Player update message received!");
-            break;
+                PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
+                UpdatePlayer(puMsg);
+                Debug.Log("Player update message received!");
+                break;
             case Commands.SERVER_UPDATE:
-            ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
-            Debug.Log("Server update message received!");
-            break;
+                ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
+                Debug.Log("Server update message received!");
+                break;
             default:
-            Debug.Log("SERVER ERROR: Unrecognized message received!");
-            break;
+                Debug.Log("SERVER ERROR: Unrecognized message received!");
+                break;
         }
+    }
+
+    void UpdatePlayer(PlayerUpdateMsg puMsg)
+    {
+        players[m_Connections[int.Parse(puMsg.player.id)].InternalId].cubPos = puMsg.player.cubPos;
+        Debug.Log("Player " + puMsg.player.id + " Position: " + puMsg.player.cubPos);
     }
 
     void OnDisconnect(int i){
