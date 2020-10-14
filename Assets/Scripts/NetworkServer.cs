@@ -62,7 +62,7 @@ public class NetworkServer : MonoBehaviour
         var connectionMsg = new InitializeConnectionMsg();
         connectionMsg.yourID = newPlayersId.ToString();
 
-        SendToClient(newPlayersId.ToString(), c);
+        SendToClient(JsonUtility.ToJson(connectionMsg), c);
         Debug.Log("Accepted a connection");
 
         //// Example to send a handshake message:

@@ -5,6 +5,8 @@ using NetworkMessages;
 using NetworkObjects;
 using System;
 using System.Text;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -45,21 +47,25 @@ public class NetworkClient : MonoBehaviour
         NetworkHeader header = JsonUtility.FromJson<NetworkHeader>(recMsg);
 
         switch(header.cmd){
+            case Commands.PLAYER_INIT:
+                InitializeConnectionMsg piMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
+                Debug.Log("Initialization message received!");
+                break; 
             case Commands.HANDSHAKE:
-            HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
-            Debug.Log("Handshake message received!");
-            break;
+                HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
+                Debug.Log("Handshake message received!");
+                break;
             case Commands.PLAYER_UPDATE:
-            PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
-            Debug.Log("Player update message received!");
-            break;
+                PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
+                Debug.Log("Player update message received!");
+                break;
             case Commands.SERVER_UPDATE:
-            ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
-            Debug.Log("Server update message received!");
-            break;
+                ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
+                Debug.Log("Server update message received!");
+                break;
             default:
-            Debug.Log("Unrecognized message received!");
-            break;
+                Debug.Log("Unrecognized message received!");
+                break;
         }
     }
 

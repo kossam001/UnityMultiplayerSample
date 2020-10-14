@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 namespace NetworkMessages
 {
     public enum Commands{
         PLAYER_UPDATE,
+        PLAYER_INIT,
         SERVER_UPDATE,
         HANDSHAKE,
         PLAYER_INPUT
@@ -18,7 +20,10 @@ namespace NetworkMessages
 
     public class InitializeConnectionMsg : NetworkHeader
     {
-        public string yourID;
+        public string yourID = "0";
+        public InitializeConnectionMsg(){
+            cmd = Commands.PLAYER_INIT;
+        }
     }
 
     [System.Serializable]
