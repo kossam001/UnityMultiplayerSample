@@ -6,7 +6,7 @@ using NetworkObjects;
 using System;
 using System.Text;
 using System.ComponentModel.Design;
-using System.Diagnostics;
+//using System.Diagnostics;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -15,13 +15,25 @@ public class NetworkClient : MonoBehaviour
     public string serverIP;
     public ushort serverPort;
 
-    
+    public GameObject playerPrefab;
+    PlayerUpdateMsg playerUpdateMsg;
+    GameObject yourCharacter;
+
     void Start ()
     {
         m_Driver = NetworkDriver.Create();
         m_Connection = default(NetworkConnection);
         var endpoint = NetworkEndPoint.Parse(serverIP,serverPort);
         m_Connection = m_Driver.Connect(endpoint);
+
+        // Init player
+        playerUpdateMsg = new PlayerUpdateMsg();
+        playerUpdateMsg.player.cubeColor = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+        yourCharacter = Instantiate(playerPrefab);
+
+        yourCharacter.GetComponent<Renderer>().material.color = playerUpdateMsg.player.cubeColor;
+        yourCharacter.AddComponent<CharacterMovement>();
+        playerUpdateMsg.player.cubPos = yourCharacter.transform.position;
     }
     
     void SendToServer(string message){
@@ -49,7 +61,7 @@ public class NetworkClient : MonoBehaviour
         switch(header.cmd){
             case Commands.PLAYER_INIT:
                 InitializeConnectionMsg piMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
-                Debug.Log("Initialization message received!");
+                Debug.Log("Initialization message received!  Your ID: " + piMsg.yourID);
                 break; 
             case Commands.HANDSHAKE:
                 HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
@@ -82,7 +94,8 @@ public class NetworkClient : MonoBehaviour
     public void OnDestroy()
     {
         m_Driver.Dispose();
-    }   
+    }
+
     void Update()
     {
         m_Driver.ScheduleUpdate().Complete();
@@ -112,5 +125,9 @@ public class NetworkClient : MonoBehaviour
 
             cmd = m_Connection.PopEvent(m_Driver, out stream);
         }
+
+        // Send Server updates
+        playerUpdateMsg.player.cubPos = yourCharacter.transform.position;
+        SendToServer(JsonUtility.ToJson(playerUpdateMsg));
     }
 }
