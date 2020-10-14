@@ -141,7 +141,7 @@ public class NetworkServer : MonoBehaviour
 
         // Create drop message
         ConnectionDroppedMsg cdMsg = new ConnectionDroppedMsg();
-        cdMsg.droppedId = i.ToString();
+        cdMsg.droppedId = m_Connections[i].InternalId.ToString();
 
         m_Connections[i] = default(NetworkConnection);
         players.RemoveAt(i);
