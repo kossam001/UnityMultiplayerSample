@@ -402,7 +402,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79e313398508b4053942f94821862d42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverIP: 127.0.0.1
+  serverIP: 3.130.200.122
   serverPort: 12345
   playerPrefab: {fileID: 5034523422592170451, guid: 000e93b165f49114183963d75ab3ad21,
     type: 3}

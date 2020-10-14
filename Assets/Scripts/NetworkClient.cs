@@ -125,7 +125,7 @@ public class NetworkClient : MonoBehaviour
         foreach (NetworkObjects.NetworkPlayer player in suMsg.players)
         {
             // Add new player
-            if (!otherPlayers.ContainsKey(player.id))
+            if (!otherPlayers.ContainsKey(player.id) && otherPlayers.Count < suMsg.players.Count)
             {
                 CreateNetworkObject(player);
             }
@@ -148,7 +148,10 @@ public class NetworkClient : MonoBehaviour
 
     void UpdateNetworkObject(NetworkObjects.NetworkPlayer player)
     {
-        otherPlayers[player.id].transform.position = player.cubPos;
+        if (otherPlayers.ContainsKey(player.id))
+        {
+            otherPlayers[player.id].transform.position = player.cubPos;
+        }
 
         //Vector3 diff = transform.TransformDirection(new Vector3(player.cubPos.x, player.cubPos.y, player.cubPos.z) - otherPlayers[player.id].transform.position);
         //otherPlayers[player.id].GetComponent<CharacterController>().Move(diff);
@@ -164,8 +167,11 @@ public class NetworkClient : MonoBehaviour
         while (true)
         {
             // Send Server updates
-            playerUpdateMsg.player.cubPos = yourCharacter.transform.position;
-            SendToServer(JsonUtility.ToJson(playerUpdateMsg));
+            if (yourCharacter)
+            {
+                playerUpdateMsg.player.cubPos = yourCharacter.transform.position;
+                SendToServer(JsonUtility.ToJson(playerUpdateMsg));
+            }
             yield return new WaitForSeconds(0.3f);
         }
     }
