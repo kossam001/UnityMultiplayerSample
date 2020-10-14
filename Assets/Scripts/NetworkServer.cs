@@ -138,7 +138,21 @@ public class NetworkServer : MonoBehaviour
 
     void OnDisconnect(int i){
         Debug.Log("Client disconnected from server");
+
+        // Create drop message
+        ConnectionDroppedMsg cdMsg = new ConnectionDroppedMsg();
+        cdMsg.droppedId = i.ToString();
+
         m_Connections[i] = default(NetworkConnection);
+        players.RemoveAt(i);
+
+        for (int j = 0; j < m_Connections.Length; j++)
+        {
+            if (!m_Connections[j].IsCreated)
+                continue;
+
+            SendToClient(JsonUtility.ToJson(cdMsg), m_Connections[j]);
+        }
     }
 
     void Update ()

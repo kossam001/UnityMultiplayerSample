@@ -10,7 +10,8 @@ namespace NetworkMessages
         PLAYER_INIT,
         SERVER_UPDATE,
         HANDSHAKE,
-        PLAYER_INPUT
+        PLAYER_INPUT,
+        PLAYER_DROPPED
     }
 
     [System.Serializable]
@@ -23,6 +24,14 @@ namespace NetworkMessages
         public string yourID = "0";
         public InitializeConnectionMsg(){
             cmd = Commands.PLAYER_INIT;
+        }
+    }
+
+    public class ConnectionDroppedMsg : NetworkHeader
+    {
+        public string droppedId = "0";
+        public ConnectionDroppedMsg(){
+            cmd = Commands.PLAYER_DROPPED;
         }
     }
 

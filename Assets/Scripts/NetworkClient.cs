@@ -94,6 +94,16 @@ public class NetworkClient : MonoBehaviour
                 UpdateNetworkObjects(suMsg);
                 Debug.Log("Server update message received!");
                 break;
+            case Commands.PLAYER_DROPPED:
+                ConnectionDroppedMsg cdMsg = JsonUtility.FromJson<ConnectionDroppedMsg>(recMsg);
+
+                // Destroy
+                GameObject character = otherPlayers[cdMsg.droppedId];
+                otherPlayers.Remove(cdMsg.droppedId);
+                Destroy(character);
+
+                Debug.Log("Player dropped message received! " + cdMsg.droppedId);
+                break;
             default:
                 Debug.Log("Unrecognized message received!");
                 break;
@@ -114,8 +124,6 @@ public class NetworkClient : MonoBehaviour
     {
         foreach (NetworkObjects.NetworkPlayer player in suMsg.players)
         {
-            Debug.Log("List of Players " + player.id);
-
             // Add new player
             if (!otherPlayers.ContainsKey(player.id))
             {
@@ -143,7 +151,7 @@ public class NetworkClient : MonoBehaviour
         otherPlayers[player.id].transform.position = player.cubPos;
 
         //Vector3 diff = transform.TransformDirection(new Vector3(player.cubPos.x, player.cubPos.y, player.cubPos.z) - otherPlayers[player.id].transform.position);
-        //otherPlayers[player.id].GetComponent<CharacterController>().Move(diff * Time.deltaTime);
+        //otherPlayers[player.id].GetComponent<CharacterController>().Move(diff);
     }
 
     public void OnDestroy()
