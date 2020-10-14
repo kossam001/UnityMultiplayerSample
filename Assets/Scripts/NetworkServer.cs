@@ -5,6 +5,7 @@ using Unity.Networking.Transport;
 using NetworkMessages;
 using System;
 using System.Text;
+using System.IO.Ports;
 
 public class NetworkServer : MonoBehaviour
 {
@@ -23,6 +24,23 @@ public class NetworkServer : MonoBehaviour
             m_Driver.Listen();
 
         m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
+    }
+
+    IEnumberator SendHandshakeToAllClient()
+    {
+        while (true)
+        {
+            for (int i = 0; i < m_Connections.Length; i++)
+            {
+                if (!m_Connections[i].IsCreated)
+                    continue;
+
+                HandshakeMsg m = new HandshakeMsg();
+                m.player.id = m_Connections[i].InternalId.ToString();
+                SendToClient(JsonUtility.ToJson(m), m_Connections[i]);
+            }
+            yield return new WaitForSeconds(2);
+        }
     }
 
     void SendToClient(string message, NetworkConnection c){
