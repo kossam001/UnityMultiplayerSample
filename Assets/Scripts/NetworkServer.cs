@@ -58,6 +58,11 @@ public class NetworkServer : MonoBehaviour
 
     void OnConnect(NetworkConnection c){
         m_Connections.Add(c);
+        var newPlayersId = c.InternalId;
+        var connectionMsg = new InitializeConnectionMsg();
+        connectionMsg.yourID = newPlayersId.ToString();
+
+        SendToClient(newPlayersId.ToString(), c);
         Debug.Log("Accepted a connection");
 
         //// Example to send a handshake message:

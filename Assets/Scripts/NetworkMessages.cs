@@ -16,6 +16,11 @@ namespace NetworkMessages
         public Commands cmd;
     }
 
+    public class InitializeConnectionMsg : NetworkHeader
+    {
+        public string yourID;
+    }
+
     [System.Serializable]
     public class HandshakeMsg:NetworkHeader{
         public NetworkObjects.NetworkPlayer player;
