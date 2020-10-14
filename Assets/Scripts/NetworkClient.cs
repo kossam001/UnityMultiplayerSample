@@ -7,6 +7,7 @@ using System;
 using System.Text;
 using System.ComponentModel.Design;
 using System.Collections;
+using System.Collections.Generic;
 //using System.Diagnostics;
 
 public class NetworkClient : MonoBehaviour
@@ -20,12 +21,16 @@ public class NetworkClient : MonoBehaviour
     PlayerUpdateMsg playerUpdateMsg;
     GameObject yourCharacter;
 
+    Dictionary<string, GameObject> otherPlayers;
+
     void Start ()
     {
         m_Driver = NetworkDriver.Create();
         m_Connection = default(NetworkConnection);
         var endpoint = NetworkEndPoint.Parse(serverIP,serverPort);
         m_Connection = m_Driver.Connect(endpoint);
+
+        otherPlayers = new Dictionary<string, GameObject>();
 
         // Init player
         playerUpdateMsg = new PlayerUpdateMsg();
@@ -72,6 +77,8 @@ public class NetworkClient : MonoBehaviour
                 m.player.id = piMsg.yourID;
                 SendToServer(JsonUtility.ToJson(m));
 
+                otherPlayers.Add(m.player.id, yourCharacter);
+
                 Debug.Log("Initialization message received!  Your ID: " + piMsg.yourID);
                 break; 
             case Commands.HANDSHAKE:
@@ -84,6 +91,7 @@ public class NetworkClient : MonoBehaviour
                 break;
             case Commands.SERVER_UPDATE:
                 ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
+                UpdateNetworkObjects(suMsg);
                 Debug.Log("Server update message received!");
                 break;
             default:
@@ -100,6 +108,42 @@ public class NetworkClient : MonoBehaviour
     void OnDisconnect(){
         Debug.Log("Client got disconnected from server");
         m_Connection = default(NetworkConnection);
+    }
+
+    void UpdateNetworkObjects(ServerUpdateMsg suMsg)
+    {
+        foreach (NetworkObjects.NetworkPlayer player in suMsg.players)
+        {
+            Debug.Log("List of Players " + player.id);
+
+            // Add new player
+            if (!otherPlayers.ContainsKey(player.id))
+            {
+                CreateNetworkObject(player);
+            }
+            else if (player.id != playerUpdateMsg.player.id)
+            {
+                UpdateNetworkObject(player);
+            }
+        }
+    }
+
+    void CreateNetworkObject(NetworkObjects.NetworkPlayer player)
+    {
+        GameObject newPlayer = Instantiate(playerPrefab);
+
+        newPlayer.GetComponent<Renderer>().material.color = player.cubeColor;
+        newPlayer.transform.position = player.cubPos;
+
+        otherPlayers.Add(player.id, newPlayer);
+    }
+
+    void UpdateNetworkObject(NetworkObjects.NetworkPlayer player)
+    {
+        otherPlayers[player.id].transform.position = player.cubPos;
+
+        //Vector3 diff = transform.TransformDirection(new Vector3(player.cubPos.x, player.cubPos.y, player.cubPos.z) - otherPlayers[player.id].transform.position);
+        //otherPlayers[player.id].GetComponent<CharacterController>().Move(diff * Time.deltaTime);
     }
 
     public void OnDestroy()

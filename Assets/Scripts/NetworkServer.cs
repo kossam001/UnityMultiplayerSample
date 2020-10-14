@@ -125,7 +125,14 @@ public class NetworkServer : MonoBehaviour
 
     void UpdatePlayer(PlayerUpdateMsg puMsg)
     {
-        players[m_Connections[int.Parse(puMsg.player.id)].InternalId].cubPos = puMsg.player.cubPos;
+        foreach (NetworkObjects.NetworkPlayer player in players)
+        {
+            if (puMsg.player.id == player.id)
+            {
+                player.cubPos = puMsg.player.cubPos;
+            }
+        }
+        //players[m_Connections[int.Parse(puMsg.player.id)].InternalId].cubPos = puMsg.player.cubPos;
         Debug.Log("Player " + puMsg.player.id + " Position: " + puMsg.player.cubPos);
     }
 
