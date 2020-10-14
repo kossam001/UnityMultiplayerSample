@@ -5,7 +5,8 @@ using Unity.Networking.Transport;
 using NetworkMessages;
 using System;
 using System.Text;
-using System.IO.Ports;
+//using System.IO.Ports;
+using System.Collections;
 
 public class NetworkServer : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class NetworkServer : MonoBehaviour
         m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
     }
 
-    IEnumberator SendHandshakeToAllClient()
+    private IEnumerator SendHandshakeToAllClient()
     {
         while (true)
         {
