@@ -125,7 +125,7 @@ public class NetworkClient : MonoBehaviour
         foreach (NetworkObjects.NetworkPlayer player in suMsg.players)
         {
             // Add new player
-            if (!otherPlayers.ContainsKey(player.id) && otherPlayers.Count < suMsg.players.Count)
+            if (!otherPlayers.ContainsKey(player.id) && otherPlayers.Count <= suMsg.players.Count)
             {
                 CreateNetworkObject(player);
             }
